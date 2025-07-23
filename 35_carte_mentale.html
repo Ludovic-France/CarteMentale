@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Carte mentale</title>
+
+  <!-- HTML2Canvas CDN pour la capture JPG -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+  <style>
+    /******************** Mise en page générale ********************/
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      height: 100vh;
+      display: flex;
+      overflow: hidden;
+      background: #fafafa;
+    }
+
+    .logo {
+      width: 100px;
+      min-height: 50px;
+      background-image: url('data:image/png;base64,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');
+      background-size: contain;
+      background-repeat: no-repeat;
+    }
+
+    #canvas-wrapper {
+      flex: 1;
+      position: relative;
+    }
+
+    #canvas {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    /* ---------- Boîte à outils ---------- */
+    #toolbox {
+      width: 270px;
+      background: #f4f4f9;
+      border-left: 1px solid #ddd;
+      padding: 1rem;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .tool-item {
+      cursor: grab;
+      user-select: none;
+      padding: 12px 16px;
+      border: 2px dashed #bbb;
+      text-align: center;
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+    }
+    
+    .image-box {
+      border-color: #4caf50;
+    }
+
+    /* ----------- Switch on/off chic ----------- */
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.9rem;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 46px;
+      height: 24px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: #ccc;
+      transition: 0.3s;
+      border-radius: 34px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background: #fff;
+      transition: 0.3s;
+      border-radius: 50%;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    }
+
+    .switch input:checked + .slider {
+      background: #e53935;
+    }
+
+    .switch input:checked + .slider:before {
+      transform: translateX(22px);
+    }
+
+    /* ---------- Nœuds ---------- */
+    .node {
+      position: absolute;
+      cursor: move;
+      padding: 10px 16px;
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+      min-width: 100px;
+      text-align: center;
+      outline-offset: 2px;
+      pointer-events: auto;
+      z-index: 3;
+      box-sizing: border-box;
+    }
+
+    .rectangle {
+      background: #e0f7fa;
+      border: 2px solid #00acc1;
+      border-radius: 12px;
+    }
+
+    .oval {
+      background: #fff3e0;
+      border: 2px solid #f57c00;
+      border-radius: 50px;
+    }
+
+    .image {
+      width: 170px;
+      min-width: 170px;
+      aspect-ratio: 16 / 9;
+      padding: 0;
+      border-radius: 8px;
+      background: #e8f5e9;
+      border: 2px solid #4caf50;
+      overflow: hidden;
+      color: #555;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9em;
+    }
+    
+    .image img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain; 
+    }
+
+    .node.selected {
+      outline: 3px solid #7e57c2;
+    }
+
+    /* ---------- Lignes ---------- */
+    svg#line-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 2;
+    }
+
+    svg#line-layer line {
+      pointer-events: stroke;
+      cursor: pointer;
+      stroke: #555;
+      stroke-width: 2;
+      transition: stroke-width 0.15s;
+    }
+
+    svg#line-layer line.hover {
+      stroke-width: 4;
+    }
+
+    /* ---------- Actions ---------- */
+    .action-row {
+      display: flex;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+
+    .action-btn {
+      flex: 1 1 80px;
+      padding: 10px 0;
+      border: none;
+      border-radius: 6px;
+      background: #7e57c2;
+      color: #fff;
+      cursor: pointer;
+      font-weight: bold;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+      transition: 0.2s;
+      min-width: 0;
+    }
+
+    .action-btn:hover {
+      background: #6746b3;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-wrapper">
+    <div id="canvas"></div>
+    <svg id="line-layer"></svg>
+  </div>
+
+  <div id="toolbox">
+    <div class="logo"></div>
+    <div class="tool-item rectangle" draggable="true" data-type="rectangle">Sujet</div>
+    <div class="tool-item oval" draggable="true" data-type="oval">Nœud</div>
+    <div class="tool-item image-box" draggable="true" data-type="image">Image</div>
+
+    <div class="action-row">
+      <button id="save-btn" class="action-btn" title="Enregistrer le projet JSON">💾 Enregistrer</button>
+      <button id="saveAs-btn" class="action-btn" title="Enregistrer le projet sous JSON">💾 Enregistrer sous</button>
+      <button id="open-btn" class="action-btn" title="Ouvrir un projet JSON">📂 Ouvrir</button>
+      <button id="export-img-btn" class="action-btn" title="Exporter en JPG">🖼️ JPG</button>
+      <input type="file" id="open-input" accept="application/json" style="display:none">
+    </div>
+
+    <div class="toggle-row">
+      <label class="switch">
+        <input type="checkbox" id="delete-toggle">
+        <span class="slider"></span>
+      </label>
+      <span>Mode suppression</span>
+    </div>
+
+    <ul style="font-size:0.8rem;color:#666;margin-top:auto;list-style:disc;padding-left:1em;">
+      <li>Glissez un élément dans la zone blanche.</li>
+      <li>Pour un nœud 'Image', glissez ou collez un fichier image dessus.</li>
+      <li>Maintenez <b>⇧ Shift</b> et cliquez successivement sur deux nœuds pour les relier.</li>
+	  <li style="color:blue;">Ctl+B pour <b>gras</b>, Ctl+U pour <u>souligner</u>, Ctl+I pour <i>italique</i></li>
+      <li>Activez le mode suppression puis cliquez sur un nœud ou un trait pour le retirer.</li>
+      <li>Utilisez <b>💾 Enregistrer</b> pour télécharger le projet en JSON, puis <b>📂 Ouvrir</b> pour le recharger.</li>
+      <li>Utilisez <b>🖼️ JPG</b> pour exporter une image de votre carte mentale.</li>
+    </ul>
+  </div>
+
+  <script>
+    /******************** Variables globales ********************/
+    const canvasWrapper = document.getElementById('canvas-wrapper');
+    const canvas         = document.getElementById('canvas');
+    const svg            = document.getElementById('line-layer');
+
+    const deleteToggle   = document.getElementById('delete-toggle');
+    const saveBtn        = document.getElementById('save-btn');
+    const saveAsBtn      = document.getElementById('saveAs-btn');
+    const openBtn        = document.getElementById('open-btn');
+    const exportImgBtn   = document.getElementById('export-img-btn');
+    const openInput      = document.getElementById('open-input');
+
+    let nodeCounter = 0;
+    let firstNode   = null;
+    const lines     = []; // { line, from, to }
+
+    /******************** Drag & Drop ********************/
+    document.querySelectorAll('.tool-item').forEach(item => {
+      item.addEventListener('dragstart', e => {
+        e.dataTransfer.setData('text/plain', item.dataset.type);
+      });
+    });
+
+    canvasWrapper.addEventListener('dragover', e => e.preventDefault());
+
+    canvasWrapper.addEventListener('drop', e => {
+      e.preventDefault();
+      const type = e.dataTransfer.getData('text/plain');
+      if (!type) return;
+
+      const rect = canvasWrapper.getBoundingClientRect();
+      createNode(type, e.clientX - rect.left, e.clientY - rect.top);
+    });
+
+    /******************** Création des nœuds ********************/
+    function createNode(type, x, y) {
+      const node = document.createElement('div');
+      node.dataset.id = `n${++nodeCounter}`;
+      
+      // La propriété `draggable` est une bonne pratique, mais le blocage de `dragstart` est plus efficace.
+      node.draggable = false;
+      
+      if (type === 'image') {
+        node.className = `node image`;
+        node.innerHTML = 'Glissez/Collez une image';
+        addImageHandlers(node);
+      } else {
+        node.className       = `node ${type}`;
+        node.contentEditable = true;
+        node.innerHTML       = type === 'rectangle' ? 'Sujet' : 'Nœud';
+      }
+
+      canvas.appendChild(node);
+
+      // Centrer le noeud sur la souris
+      const nodeRect = node.getBoundingClientRect();
+      node.style.left = `${x - nodeRect.width / 2}px`;
+      node.style.top  = `${y - nodeRect.height / 2}px`;
+
+      makeDraggable(node);
+      node.addEventListener('mousedown', onNodeMouseDown);
+
+      return node; // pour reconstruction
+    }
+
+    /******************** Gestion des images ********************/
+    function addImageHandlers(node) {
+      node.addEventListener('dragover', e => e.preventDefault());
+
+      node.addEventListener('drop', e => {
+        e.preventDefault();
+        e.stopPropagation(); 
+        const file = e.dataTransfer.files[0];
+        if (file && file.type.startsWith('image/')) {
+          setImageOnNode(node, file);
+        }
+      });
+      
+      node.addEventListener('paste', e => {
+        e.preventDefault();
+        e.stopPropagation();
+        const items = e.clipboardData.items;
+        for (const item of items) {
+          if (item.kind === 'file' && item.type.startsWith('image/')) {
+            const file = item.getAsFile();
+            setImageOnNode(node, file);
+            break;
+          }
+        }
+      });
+    }
+
+    function setImageOnNode(node, file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const dataUrl = event.target.result;
+        node.innerHTML = ''; 
+        const img = document.createElement('img');
+        img.src = dataUrl;
+        img.draggable = false; 
+        node.appendChild(img);
+        updateAttachedLines(node);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    /******************** Déplacement ********************/
+    function makeDraggable(node) {
+      let offsetX, offsetY;
+
+      // *** CORRECTION DÉFINITIVE ***
+      // On bloque l'événement `dragstart` à la source.
+      // Cela empêche le glisser-déposer natif du navigateur de se déclencher,
+      // ce qui résout le bug du "nœud fantôme", SANS AFFECTER le `mousedown`
+      // qui est nécessaire pour l'édition de texte.
+      node.addEventListener('dragstart', e => {
+        e.preventDefault();
+      });
+
+      node.addEventListener('mousedown', e => {
+        if (deleteToggle.checked || e.button !== 0 || e.shiftKey) return;
+        
+        offsetX = e.offsetX;
+        offsetY = e.offsetY;
+
+        const drag = e2 => {
+          const rect = canvasWrapper.getBoundingClientRect();
+          node.style.left = `${Math.round((e2.clientX - rect.left - offsetX) / 16) * 16}px`;
+          node.style.top  = `${Math.round((e2.clientY - rect.top  - offsetY) / 16) * 16}px`;
+          updateAttachedLines(node);
+        };
+
+        const stop = () => {
+          document.removeEventListener('mousemove', drag);
+          document.removeEventListener('mouseup', stop);
+        };
+
+        document.addEventListener('mousemove', drag);
+        document.addEventListener('mouseup', stop);
+      });
+    }
+
+    function updateAttachedLines(node) {
+      lines.forEach(l => {
+        if (l.from === node || l.to === node) updateLine(l);
+      });
+    }
+
+    /******************** Connexion ********************/
+    function onNodeMouseDown(e) {
+      e.stopPropagation();
+
+      if (deleteToggle.checked) {
+        removeNode(this);
+        return;
+      }
+
+      if (!e.shiftKey) { 
+        if (firstNode) {
+          firstNode.classList.remove('selected');
+          firstNode = null;
+        }
+        return;
+      }
+
+      if (!firstNode) {
+        firstNode = this;
+        this.classList.add('selected');
+      } else if (firstNode !== this) {
+        createConnection(firstNode, this);
+        firstNode.classList.remove('selected');
+        firstNode = null;
+      }
+    }
+
+    function createConnection(a, b) {
+      if (lines.find(l => (l.from === a && l.to === b) || (l.from === b && l.to === a))) return;
+
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      svg.appendChild(line);
+
+      const obj = { line, from: a, to: b };
+      lines.push(obj);
+
+      updateLine(obj);
+
+      line.addEventListener('mousedown', e => {
+        e.stopPropagation();
+        if (deleteToggle.checked) removeLine(line);
+      });
+
+      line.addEventListener('mouseenter', () => line.classList.add('hover'));
+      line.addEventListener('mouseleave', () => line.classList.remove('hover'));
+    }
+
+    function updateLine({ line, from, to }) {
+      const r1 = from.getBoundingClientRect();
+      const r2 = to.getBoundingClientRect();
+      const pr = canvasWrapper.getBoundingClientRect();
+
+      line.setAttribute('x1', r1.left + r1.width  / 2 - pr.left);
+      line.setAttribute('y1', r1.top  + r1.height / 2 - pr.top);
+      line.setAttribute('x2', r2.left + r2.width  / 2 - pr.left);
+      line.setAttribute('y2', r2.top  + r2.height / 2 - pr.top);
+    }
+
+    /******************** Suppression ********************/
+    function removeNode(node) {
+      lines.filter(l => l.from === node || l.to === node).forEach(l => removeLine(l.line));
+      node.remove();
+    }
+
+    function removeLine(line) {
+      const idx = lines.findIndex(l => l.line === line);
+      if (idx > -1) lines.splice(idx, 1);
+      line.remove();
+    }
+
+    /******************** Enregistrer & Ouvrir ********************/
+    function serializeProject() {
+      const nodesArr = Array.from(canvas.querySelectorAll('.node')).map(node => ({
+        id:   node.dataset.id,
+        type: node.classList.contains('oval') ? 'oval' : node.classList.contains('image') ? 'image' : 'rectangle',
+        html: node.innerHTML, 
+        left: parseInt(node.style.left, 10),
+        top:  parseInt(node.style.top,  10)
+      }));
+
+      const connArr = lines.map(l => ({
+        from: l.from.dataset.id,
+        to:   l.to.dataset.id
+      }));
+
+      return { nodes: nodesArr, connections: connArr };
+    }
+
+    function saveProject() {
+      const data = serializeProject();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = '35_mindmap.json';
+      a.click();
+
+      URL.revokeObjectURL(a.href);
+    }
+
+    function saveProjectAs() {
+      const data = serializeProject();
+      const json = JSON.stringify(data, null, 2);
+
+      let filename = prompt('Nom du fichier ?', '35_mind.json');
+      if (filename === null) return; 
+      filename = filename.trim() || '35_mindmap.json';
+      if (!/\.json$/i.test(filename)) filename += '.json';
+
+      const blob = new Blob([json], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    function clearProject() {
+      Array.from(canvas.querySelectorAll('.node')).forEach(n => n.remove());
+      Array.from(svg.querySelectorAll('line')).forEach(l => l.remove());
+
+      lines.length = 0;
+      firstNode   = null;
+      nodeCounter = 0;
+    }
+
+    function loadProject(data) {
+      clearProject();
+      const idMap = {};
+
+      data.nodes.forEach(n => {
+        const node = createNode(n.type, 0, 0); 
+        node.innerHTML = n.html || n.text || ''; 
+        node.dataset.id = n.id;
+        node.style.left = `${n.left}px`;
+        node.style.top  = `${n.top}px`;
+
+        idMap[n.id] = node;
+
+        const num = parseInt(n.id.replace('n', ''), 10);
+        if (num > nodeCounter) nodeCounter = num;
+      });
+
+      (data.connections || []).forEach(c => {
+        const from = idMap[c.from];
+        const to   = idMap[c.to];
+        if (from && to) createConnection(from, to);
+      });
+    }
+
+    function handleOpen(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = ev => {
+        try {
+          const data = JSON.parse(ev.target.result);
+          if (!data.nodes || !data.connections) throw new Error();
+          loadProject(data);
+        } catch {
+          alert('Fichier JSON invalide.');
+        }
+      };
+
+      reader.readAsText(file);
+      openInput.value = '';
+    }
+
+    saveBtn.addEventListener('click', saveProject);
+    saveAsBtn.addEventListener('click', saveProjectAs);
+    openBtn.addEventListener('click', () => openInput.click());
+    openInput.addEventListener('change', handleOpen);
+
+    /******************** Export JPG ********************/
+    exportImgBtn.addEventListener('click', () => {
+      canvasWrapper.classList.add('exporting');
+
+      html2canvas(canvasWrapper, { backgroundColor: '#ffffff', scale: 2 })
+        .then(cvs => {
+          const link = document.createElement('a');
+          link.download = 'mindmap.jpg';
+          link.href     = cvs.toDataURL('image/jpeg', 0.92);
+          link.click();
+          canvasWrapper.classList.remove('exporting');
+        })
+        .catch(() => {
+          alert('La capture a échoué. Veuillez réessayer.');
+          canvasWrapper.classList.remove('exporting');
+        });
+    });
+
+    /******************** Clic arrière-plan ********************/
+    canvasWrapper.addEventListener('mousedown', () => {
+      if (firstNode) {
+        firstNode.classList.remove('selected');
+        firstNode = null;
+      }
+    });
+  </script>
+</body>
+</html>
