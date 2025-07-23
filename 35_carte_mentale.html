@@ -193,6 +193,11 @@
       stroke-width: 4;
     }
 
+    svg#line-layer polygon {
+      fill: #555;
+      pointer-events: none;
+    }
+
     /* ---------- Actions ---------- */
     .action-row {
       display: flex;
@@ -260,20 +265,23 @@
 
   <script>
     /******************** Variables globales ********************/
-    const canvasWrapper = document.getElementById('canvas-wrapper');
-    const canvas         = document.getElementById('canvas');
-    const svg            = document.getElementById('line-layer');
+	  const canvasWrapper = document.getElementById('canvas-wrapper');
+	  const canvas         = document.getElementById('canvas');
+	  const svg            = document.getElementById('line-layer');
 
-    const deleteToggle   = document.getElementById('delete-toggle');
-    const saveBtn        = document.getElementById('save-btn');
-    const saveAsBtn      = document.getElementById('saveAs-btn');
-    const openBtn        = document.getElementById('open-btn');
-    const exportImgBtn   = document.getElementById('export-img-btn');
-    const openInput      = document.getElementById('open-input');
+	  const deleteToggle   = document.getElementById('delete-toggle');
+	  const saveBtn        = document.getElementById('save-btn');
+	  const saveAsBtn      = document.getElementById('saveAs-btn');
+	  const openBtn        = document.getElementById('open-btn');
+	  const exportImgBtn   = document.getElementById('export-img-btn');
+	  const openInput      = document.getElementById('open-input');
+
+	  const ARROW_SIZE = 12; // Taille de la flèche en pixels
 
     let nodeCounter = 0;
     let firstNode   = null;
-    const lines     = []; // { line, from, to }
+    let arrowMode   = false; // vraie si connexion fléchée
+    const lines     = []; // { line, from, to, arrow? }
 
     /******************** Drag & Drop ********************/
     document.querySelectorAll('.tool-item').forEach(item => {
@@ -416,22 +424,51 @@
         return;
       }
 
-      if (!e.shiftKey) { 
+      if (!e.shiftKey && !e.ctrlKey) {
         if (firstNode) {
           firstNode.classList.remove('selected');
           firstNode = null;
+          arrowMode = false;
         }
         return;
       }
 
       if (!firstNode) {
         firstNode = this;
+        arrowMode = e.ctrlKey;
         this.classList.add('selected');
       } else if (firstNode !== this) {
-        createConnection(firstNode, this);
+        createConnection(firstNode, this, arrowMode);
         firstNode.classList.remove('selected');
         firstNode = null;
+        arrowMode = false;
       }
+    }
+
+    function createConnection(a, b, withArrow = false) {
+      if (lines.find(l => (l.from === a && l.to === b) || (l.from === b && l.to === a))) return;
+
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      svg.appendChild(line);
+
+      const obj = { line, from: a, to: b };
+      if (withArrow) {
+        const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+        arrow.setAttribute('points', `0,0 -${ARROW_SIZE},${ARROW_SIZE/2} -${ARROW_SIZE},-${ARROW_SIZE/2}`);
+        svg.appendChild(arrow);
+        obj.arrow = arrow;
+      }
+      lines.push(obj);
+	  
+	  updateLine(obj);
+
+      line.addEventListener('mousedown', e => {
+        e.stopPropagation();
+        if (deleteToggle.checked) removeLine(line);
+      });
+
+      line.addEventListener('mouseenter', () => line.classList.add('hover'));
+      line.addEventListener('mouseleave', () => line.classList.remove('hover'));
     }
 
     function createConnection(a, b) {
@@ -454,15 +491,27 @@
       line.addEventListener('mouseleave', () => line.classList.remove('hover'));
     }
 
-    function updateLine({ line, from, to }) {
+     function updateLine({ line, from, to, arrow }) {
       const r1 = from.getBoundingClientRect();
       const r2 = to.getBoundingClientRect();
       const pr = canvasWrapper.getBoundingClientRect();
 
-      line.setAttribute('x1', r1.left + r1.width  / 2 - pr.left);
-      line.setAttribute('y1', r1.top  + r1.height / 2 - pr.top);
-      line.setAttribute('x2', r2.left + r2.width  / 2 - pr.left);
-      line.setAttribute('y2', r2.top  + r2.height / 2 - pr.top);
+      const x1 = r1.left + r1.width  / 2 - pr.left;
+      const y1 = r1.top  + r1.height / 2 - pr.top;
+      const x2 = r2.left + r2.width  / 2 - pr.left;
+      const y2 = r2.top  + r2.height / 2 - pr.top;
+
+      line.setAttribute('x1', x1);
+      line.setAttribute('y1', y1);
+      line.setAttribute('x2', x2);
+      line.setAttribute('y2', y2);
+
+      if (arrow) {
+        const mx = (x1 + x2) / 2;
+        const my = (y1 + y2) / 2;
+        const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+        arrow.setAttribute('transform', `translate(${mx},${my}) rotate(${angle})`);
+      }
     }
 
     /******************** Suppression ********************/
@@ -473,7 +522,10 @@
 
     function removeLine(line) {
       const idx = lines.findIndex(l => l.line === line);
-      if (idx > -1) lines.splice(idx, 1);
+      if (idx > -1) {
+        if (lines[idx].arrow) lines[idx].arrow.remove();
+        lines.splice(idx, 1);
+      }
       line.remove();
     }
 
@@ -489,7 +541,8 @@
 
       const connArr = lines.map(l => ({
         from: l.from.dataset.id,
-        to:   l.to.dataset.id
+        to:   l.to.dataset.id,
+        arrow: !!l.arrow
       }));
 
       return { nodes: nodesArr, connections: connArr };
@@ -524,14 +577,16 @@
       URL.revokeObjectURL(a.href);
     }
 
-    function clearProject() {
-      Array.from(canvas.querySelectorAll('.node')).forEach(n => n.remove());
-      Array.from(svg.querySelectorAll('line')).forEach(l => l.remove());
+      function clearProject() {
+        Array.from(canvas.querySelectorAll('.node')).forEach(n => n.remove());
+        Array.from(svg.querySelectorAll('line')).forEach(l => l.remove());
+        Array.from(svg.querySelectorAll('polygon')).forEach(p => p.remove());
 
-      lines.length = 0;
-      firstNode   = null;
-      nodeCounter = 0;
-    }
+        lines.length = 0;
+        firstNode   = null;
+        arrowMode   = false;
+        nodeCounter = 0;
+      }
 
     function loadProject(data) {
       clearProject();
@@ -553,7 +608,7 @@
       (data.connections || []).forEach(c => {
         const from = idMap[c.from];
         const to   = idMap[c.to];
-        if (from && to) createConnection(from, to);
+        if (from && to) createConnection(from, to, c.arrow);
       });
     }
 
@@ -604,6 +659,7 @@
       if (firstNode) {
         firstNode.classList.remove('selected');
         firstNode = null;
+		arrowMode = false;
       }
     });
   </script>
