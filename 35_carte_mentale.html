@@ -446,6 +446,7 @@
     }
 
     function createConnection(a, b, withArrow = false) {
+	console.log(withArrow);
       if (lines.find(l => (l.from === a && l.to === b) || (l.from === b && l.to === a))) return;
 
       const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
@@ -461,26 +462,6 @@
       lines.push(obj);
 	  
 	  updateLine(obj);
-
-      line.addEventListener('mousedown', e => {
-        e.stopPropagation();
-        if (deleteToggle.checked) removeLine(line);
-      });
-
-      line.addEventListener('mouseenter', () => line.classList.add('hover'));
-      line.addEventListener('mouseleave', () => line.classList.remove('hover'));
-    }
-
-    function createConnection(a, b) {
-      if (lines.find(l => (l.from === a && l.to === b) || (l.from === b && l.to === a))) return;
-
-      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-      svg.appendChild(line);
-
-      const obj = { line, from: a, to: b };
-      lines.push(obj);
-
-      updateLine(obj);
 
       line.addEventListener('mousedown', e => {
         e.stopPropagation();
