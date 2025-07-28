@@ -181,6 +181,14 @@
 	  z-index: 1;
     }
 
+	.group:hover {
+	  z-index: 5;
+	}
+
+	.group .node {
+	  pointer-events: none;
+	}
+
 
     .group .resizer {
       position: absolute;
@@ -496,12 +504,6 @@
       node.addEventListener('mousedown', e => {
         if (deleteToggle.checked || e.button !== 0 || e.shiftKey) return;
 
-        const isGroup = node.classList.contains('group');
-
-        if (isGroup) {
-          svg.style.pointerEvents = 'none';
-        }
-
         offsetX = e.offsetX;
         offsetY = e.offsetY;
 
@@ -515,10 +517,6 @@
         const stop = () => {
           document.removeEventListener('mousemove', drag);
           document.removeEventListener('mouseup', stop);
-
-          if (isGroup) {
-            svg.style.pointerEvents = 'auto';
-          }
 
           const rectNode = node.getBoundingClientRect();
           const target = document.elementFromPoint(rectNode.left + rectNode.width/2, rectNode.top + rectNode.height/2);
