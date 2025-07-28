@@ -174,6 +174,17 @@
       min-height: 100px;
       position: absolute;
     }
+
+    .group .resizer {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      right: 0;
+      bottom: 0;
+      background: #9e9e9e;
+      cursor: se-resize;
+      border-radius: 2px 0 0 0;
+    }
     
     .image img {
         width: 100%;
@@ -297,7 +308,7 @@
     let nodeCounter = 0;
     let firstNode   = null;
     let arrowMode   = false; // vraie si connexion fléchée
-    const lines     = []; 	 // { line, from, to, arrow? }
+    const lines     = []; // { line, from, to, arrow? }
 
     /******************** Drag & Drop ********************/
     document.querySelectorAll('.tool-item').forEach(item => {
@@ -335,6 +346,10 @@
         addImageHandlers(node);
       } else if (type === 'group') {
         node.className = 'node group';
+        const resizer = document.createElement('div');
+        resizer.className = 'resizer';
+        node.appendChild(resizer);
+        addGroupHandlers(node);
       } else {
         node.className       = `node ${type}`;
         node.contentEditable = true;
@@ -342,7 +357,6 @@
       }
 
       parent.appendChild(node);
-      if (type === 'group') addGroupHandlers(node);
 
       // Centrer le noeud sur la souris
       const nodeRect = node.getBoundingClientRect();
@@ -406,6 +420,32 @@
         const rect = node.getBoundingClientRect();
         createNode(type, e.clientX - rect.left, e.clientY - rect.top, node);
       });
+
+      const resizer = node.querySelector('.resizer');
+      if (resizer) {
+        resizer.addEventListener('mousedown', e => {
+          e.stopPropagation();
+          e.preventDefault();
+          const startX = e.clientX;
+          const startY = e.clientY;
+          const startW = parseInt(getComputedStyle(node).width, 10);
+          const startH = parseInt(getComputedStyle(node).height, 10);
+
+          function move(ev) {
+            node.style.width  = Math.max(200, startW + ev.clientX - startX) + 'px';
+            node.style.height = Math.max(100, startH + ev.clientY - startY) + 'px';
+            updateLinesRecursive(node);
+          }
+
+          function stop() {
+            document.removeEventListener('mousemove', move);
+            document.removeEventListener('mouseup', stop);
+          }
+
+          document.addEventListener('mousemove', move);
+          document.addEventListener('mouseup', stop);
+        });
+      }
     }
 
     /******************** Déplacement ********************/
@@ -576,6 +616,8 @@
         html: node.innerHTML,
         left: parseInt(node.style.left, 10),
         top:  parseInt(node.style.top,  10),
+        width:  parseInt(node.style.width  || node.offsetWidth , 10),
+        height: parseInt(node.style.height || node.offsetHeight, 10),
         parent: node.parentElement.classList.contains('node') ? node.parentElement.dataset.id : ''
       }));
 
@@ -639,6 +681,8 @@
         node.dataset.id = n.id;
         node.style.left = `${n.left}px`;
         node.style.top  = `${n.top}px`;
+        node.style.width  = n.width  + 'px';
+        node.style.height = n.height + 'px';
 
         idMap[n.id] = node;
 
