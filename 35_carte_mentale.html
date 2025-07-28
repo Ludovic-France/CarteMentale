@@ -133,7 +133,7 @@
       text-align: center;
       outline-offset: 2px;
       pointer-events: auto;
-      z-index: 3; //3
+      z-index: 3;
       box-sizing: border-box;
     }
 
@@ -146,7 +146,7 @@
     .oval {
       background: #fff3e0;
       border: 2px solid #f57c00;
-      border-radius: 24px;
+      border-radius: 50px;
     }
 
     .image {
@@ -167,28 +167,16 @@
 
     .group {
       background: #f3f3f3;
-	  /*background: transparent;*/
-	  /*background-color: rgba(243, 243, 243, 0.5);*/
       /*border: 2px dashed #9e9e9e;*/
 	  border: 1px solid #9e9e9e;
       border-radius: 8px;
       padding: 0;
-      min-width: 150px;
+      min-width: 125px;
 	  width: 180px;
 	  height: 250px;
       min-height: 100px;
       position: absolute;
-	  z-index: 1;
     }
-
-	.group:hover {
-	  z-index: 5;
-	}
-	
-	.group .node {
-	  pointer-events: none;
-	}
-
 
     .group .resizer {
       position: absolute;
@@ -209,7 +197,7 @@
 	  top: 0;
       border: none;
 	  border-bottom: 1px dashed #9e9e9e;
-	  color: blue;
+	  
       background: transparent;
       font-weight: bold;
       text-align: center;
@@ -588,8 +576,7 @@
     function createConnection(a, b, withArrow = false) {
       const gA = getParentGroup(a);
       const gB = getParentGroup(b);
-      //if ((gA && gB && gA !== gB) || (gA && !gB) || (!gA && gB)) return;
-	  if ((gA && !gB) || (!gA && gB)) return;
+      if ((gA && gB && gA !== gB) || (gA && !gB) || (!gA && gB)) return;
       if (lines.find(l => (l.from === a && l.to === b) || (l.from === b && l.to === a))) return;
 
       const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
@@ -616,10 +603,6 @@
     }
 
      function updateLine({ line, from, to, arrow }) {
-		// 0.5 = centre (actuel)
-		// 0.6 = 60% du chemin le long de la ligne
-		// 0.7 = 70% du chemin le long de la ligne (bonne valeur pour "légèrement après le centre")
-		// 1.0 = à la fin de la ligne (point x2, y2)
       const r1 = from.getBoundingClientRect();
       const r2 = to.getBoundingClientRect();
       const pr = canvasWrapper.getBoundingClientRect();
@@ -635,11 +618,8 @@
       line.setAttribute('y2', y2);
 
       if (arrow) {
-		const offsetFactor = 0.55; // Ajustez cette valeur pour le placement désiré
-        //const mx = (x1 + x2) / 2;
-        //const my = (y1 + y2) / 2;        
-		const mx = x1 + (x2- x1)  * offsetFactor;
-        const my = y1 + (y2 - y1)  * offsetFactor;
+        const mx = (x1 + x2) / 2;
+        const my = (y1 + y2) / 2;
         const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
         arrow.setAttribute('transform', `translate(${mx},${my}) rotate(${angle})`);
       }
