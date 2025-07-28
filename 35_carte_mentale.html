@@ -133,7 +133,7 @@
       text-align: center;
       outline-offset: 2px;
       pointer-events: auto;
-      z-index: 3;
+      z-index: 3; //3
       box-sizing: border-box;
     }
 
@@ -176,6 +176,7 @@
 	  height: 250px;
       min-height: 100px;
       position: absolute;
+	  /*z-index: 2;*/
     }
 
     .group .resizer {
@@ -576,7 +577,8 @@
     function createConnection(a, b, withArrow = false) {
       const gA = getParentGroup(a);
       const gB = getParentGroup(b);
-      if ((gA && gB && gA !== gB) || (gA && !gB) || (!gA && gB)) return;
+      //if ((gA && gB && gA !== gB) || (gA && !gB) || (!gA && gB)) return;
+	  if ((gA && !gB) || (!gA && gB)) return;
       if (lines.find(l => (l.from === a && l.to === b) || (l.from === b && l.to === a))) return;
 
       const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
