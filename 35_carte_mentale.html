@@ -165,7 +165,7 @@
       font-size: 0.9em;
     }
 
-    .group {
+    .group-container {
       background: #f3f3f3;
 	  /*background: transparent;*/
 	  /*background-color: rgba(243, 243, 243, 0.5);*/
@@ -181,16 +181,16 @@
 	  z-index: 1;
     }
 
-	.group:hover {
+	.group-container:hover {
 	  z-index: 5;
 	}
 
-	.group .node {
+	.group-container .node {
 	  pointer-events: none;
 	}
 
 
-    .group .resizer {
+    .group-container .resizer {
       position: absolute;
       width: 12px;
       height: 12px;
@@ -201,7 +201,7 @@
       border-radius: 2px 0 0 0;
     }
 
-    .group .group-title {
+    .group-container .group-title {
       width: 100%;
       box-sizing: border-box;
       /*margin: -10px 0 10px;*/
@@ -355,7 +355,7 @@
       if (!type) return;
 
       const target = document.elementFromPoint(e.clientX, e.clientY);
-      const group  = target && target.closest('.node.group');
+      const group  = target && target.closest('.node.group-container');
       const rect   = (group || canvas).getBoundingClientRect();
 
       createNode(type, e.clientX - rect.left, e.clientY - rect.top, group || canvas);
@@ -375,7 +375,7 @@
         node.innerHTML = 'Glissez/Collez une image';
         addImageHandlers(node);
       } else if (type === 'group') {
-        node.className = 'node group';
+        node.className = 'node group-container';
         const title = document.createElement('input');
         title.className = 'group-title';
         title.placeholder = 'Nom du groupe';
@@ -504,8 +504,6 @@
       node.addEventListener('mousedown', e => {
         if (deleteToggle.checked || e.button !== 0 || e.shiftKey) return;
 
-        canvasWrapper.style.pointerEvents = 'none';
-
         offsetX = e.offsetX;
         offsetY = e.offsetY;
 
@@ -520,11 +518,9 @@
           document.removeEventListener('mousemove', drag);
           document.removeEventListener('mouseup', stop);
 
-          canvasWrapper.style.pointerEvents = 'auto';
-
           const rectNode = node.getBoundingClientRect();
           const target = document.elementFromPoint(rectNode.left + rectNode.width/2, rectNode.top + rectNode.height/2);
-          const group = target && target.closest('.node.group');
+          const group = target && target.closest('.node.group-container');
           const newParent = group || canvas;
           if (node.parentElement !== newParent) {
             const oldRect = rectNode;
@@ -555,7 +551,7 @@
     }
 
     function getParentGroup(node) {
-      const g = node.closest('.node.group');
+      const g = node.closest('.node.group-container');
       return g && g !== node ? g : null;
     }
 
@@ -671,9 +667,9 @@
         id:   node.dataset.id,
         type: node.classList.contains('oval') ? 'oval' :
               node.classList.contains('image') ? 'image' :
-              node.classList.contains('group') ? 'group' : 'rectangle',
-        html: node.classList.contains('group') ? '' : node.innerHTML,
-        name: node.classList.contains('group') ? node.querySelector('.group-title').value : undefined,
+              node.classList.contains('group-container') ? 'group' : 'rectangle',
+        html: node.classList.contains('group-container') ? '' : node.innerHTML,
+        name: node.classList.contains('group-container') ? node.querySelector('.group-title').value : undefined,
         left: parseInt(node.style.left, 10),
         top:  parseInt(node.style.top,  10),
         width:  parseInt(node.style.width  || node.offsetWidth , 10),
@@ -815,3 +811,5 @@
   </script>
 </body>
 </html>
+
+[end of 35_carte_mentale.html]
