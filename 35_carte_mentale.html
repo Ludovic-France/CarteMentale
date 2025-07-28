@@ -165,7 +165,7 @@
       font-size: 0.9em;
     }
 
-    .group-container {
+    .group {
       background: #f3f3f3;
 	  /*background: transparent;*/
 	  /*background-color: rgba(243, 243, 243, 0.5);*/
@@ -181,16 +181,24 @@
 	  z-index: 1;
     }
 
-	.group-container:hover {
+	.group:hover {
 	  z-index: 5;
 	}
 
-	.group-container .node {
+	.group .node {
 	  pointer-events: none;
 	}
 
+    .group .handle {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      cursor: move;
+    }
 
-    .group-container .resizer {
+    .group .resizer {
       position: absolute;
       width: 12px;
       height: 12px;
@@ -201,7 +209,7 @@
       border-radius: 2px 0 0 0;
     }
 
-    .group-container .group-title {
+    .group .group-title {
       width: 100%;
       box-sizing: border-box;
       /*margin: -10px 0 10px;*/
@@ -355,7 +363,7 @@
       if (!type) return;
 
       const target = document.elementFromPoint(e.clientX, e.clientY);
-      const group  = target && target.closest('.node.group-container');
+      const group  = target && target.closest('.node.group');
       const rect   = (group || canvas).getBoundingClientRect();
 
       createNode(type, e.clientX - rect.left, e.clientY - rect.top, group || canvas);
@@ -375,11 +383,15 @@
         node.innerHTML = 'Glissez/Collez une image';
         addImageHandlers(node);
       } else if (type === 'group') {
-        node.className = 'node group-container';
+        node.className = 'node group';
         const title = document.createElement('input');
         title.className = 'group-title';
         title.placeholder = 'Nom du groupe';
         node.appendChild(title);
+
+        const handle = document.createElement('div');
+        handle.className = 'handle';
+        node.appendChild(handle);
 
         const resizer = document.createElement('div');
         resizer.className = 'resizer';
@@ -501,42 +513,45 @@
         e.preventDefault();
       });
 
-      node.addEventListener('mousedown', e => {
-        if (deleteToggle.checked || e.button !== 0 || e.shiftKey) return;
+      const handle = node.querySelector('.handle');
+      if (handle) {
+        handle.addEventListener('mousedown', e => {
+          if (deleteToggle.checked || e.button !== 0 || e.shiftKey) return;
 
-        offsetX = e.offsetX;
-        offsetY = e.offsetY;
+          offsetX = e.offsetX;
+          offsetY = e.offsetY;
 
-        const drag = e2 => {
-          const rect = node.offsetParent.getBoundingClientRect();
-          node.style.left = `${Math.round((e2.clientX - rect.left - offsetX) / 16) * 16}px`;
-          node.style.top  = `${Math.round((e2.clientY - rect.top  - offsetY) / 16) * 16}px`;
-          updateLinesRecursive(node);
-        };
+          const drag = e2 => {
+            const rect = node.offsetParent.getBoundingClientRect();
+            node.style.left = `${Math.round((e2.clientX - rect.left - offsetX) / 16) * 16}px`;
+            node.style.top  = `${Math.round((e2.clientY - rect.top  - offsetY) / 16) * 16}px`;
+            updateLinesRecursive(node);
+          };
 
-        const stop = () => {
-          document.removeEventListener('mousemove', drag);
-          document.removeEventListener('mouseup', stop);
+          const stop = () => {
+            document.removeEventListener('mousemove', drag);
+            document.removeEventListener('mouseup', stop);
 
-          const rectNode = node.getBoundingClientRect();
-          const target = document.elementFromPoint(rectNode.left + rectNode.width/2, rectNode.top + rectNode.height/2);
-          const group = target && target.closest('.node.group-container');
-          const newParent = group || canvas;
-          if (node.parentElement !== newParent) {
-            const oldRect = rectNode;
-            newParent.appendChild(node);
-            node.dataset.parent = newParent.dataset.id || '';
-            const pr = newParent.getBoundingClientRect();
-            node.style.left = `${oldRect.left - pr.left}px`;
-            node.style.top  = `${oldRect.top  - pr.top}px`;
-          }
+            const rectNode = node.getBoundingClientRect();
+            const target = document.elementFromPoint(rectNode.left + rectNode.width/2, rectNode.top + rectNode.height/2);
+            const group = target && target.closest('.node.group');
+            const newParent = group || canvas;
+            if (node.parentElement !== newParent) {
+              const oldRect = rectNode;
+              newParent.appendChild(node);
+              node.dataset.parent = newParent.dataset.id || '';
+              const pr = newParent.getBoundingClientRect();
+              node.style.left = `${oldRect.left - pr.left}px`;
+              node.style.top  = `${oldRect.top  - pr.top}px`;
+            }
 
-          updateLinesRecursive(node);
-        };
+            updateLinesRecursive(node);
+          };
 
-        document.addEventListener('mousemove', drag);
-        document.addEventListener('mouseup', stop);
-      });
+          document.addEventListener('mousemove', drag);
+          document.addEventListener('mouseup', stop);
+        });
+      }
     }
 
     function updateAttachedLines(node) {
@@ -551,7 +566,7 @@
     }
 
     function getParentGroup(node) {
-      const g = node.closest('.node.group-container');
+      const g = node.closest('.node.group');
       return g && g !== node ? g : null;
     }
 
@@ -667,9 +682,9 @@
         id:   node.dataset.id,
         type: node.classList.contains('oval') ? 'oval' :
               node.classList.contains('image') ? 'image' :
-              node.classList.contains('group-container') ? 'group' : 'rectangle',
-        html: node.classList.contains('group-container') ? '' : node.innerHTML,
-        name: node.classList.contains('group-container') ? node.querySelector('.group-title').value : undefined,
+              node.classList.contains('group') ? 'group' : 'rectangle',
+        html: node.classList.contains('group') ? '' : node.innerHTML,
+        name: node.classList.contains('group') ? node.querySelector('.group-title').value : undefined,
         left: parseInt(node.style.left, 10),
         top:  parseInt(node.style.top,  10),
         width:  parseInt(node.style.width  || node.offsetWidth , 10),
