@@ -64,7 +64,7 @@
     .group-box {
       border-color: #9e9e9e;
     }
-    
+
     .image-box {
       border-color: #4caf50;
     }
@@ -181,14 +181,6 @@
 	  z-index: 1;
     }
 
-	.group:hover {
-	  z-index: 5;
-	}
-	
-	.group .node {
-	  pointer-events: none;
-	}
-
 
     .group .resizer {
       position: absolute;
@@ -215,11 +207,11 @@
       text-align: center;
       outline: none;
     }
-    
+
     .image img {
         width: 100%;
         height: 100%;
-        object-fit: contain; 
+        object-fit: contain;
     }
 
     .node.selected {
@@ -366,10 +358,10 @@
       const node = document.createElement('div');
       node.dataset.id = `n${++nodeCounter}`;
       node.dataset.parent = parent.dataset.id || '';
-      
+
       // La propriété `draggable` est une bonne pratique, mais le blocage de `dragstart` est plus efficace.
       node.draggable = false;
-      
+
       if (type === 'image') {
         node.className = `node image`;
         node.innerHTML = 'Glissez/Collez une image';
@@ -410,13 +402,13 @@
 
       node.addEventListener('drop', e => {
         e.preventDefault();
-        e.stopPropagation(); 
+        e.stopPropagation();
         const file = e.dataTransfer.files[0];
         if (file && file.type.startsWith('image/')) {
           setImageOnNode(node, file);
         }
       });
-      
+
       node.addEventListener('paste', e => {
         e.preventDefault();
         e.stopPropagation();
@@ -503,7 +495,13 @@
 
       node.addEventListener('mousedown', e => {
         if (deleteToggle.checked || e.button !== 0 || e.shiftKey) return;
-        
+
+        const isGroup = node.classList.contains('group');
+
+        if (isGroup) {
+          svg.style.pointerEvents = 'none';
+        }
+
         offsetX = e.offsetX;
         offsetY = e.offsetY;
 
@@ -517,6 +515,10 @@
         const stop = () => {
           document.removeEventListener('mousemove', drag);
           document.removeEventListener('mouseup', stop);
+
+          if (isGroup) {
+            svg.style.pointerEvents = 'auto';
+          }
 
           const rectNode = node.getBoundingClientRect();
           const target = document.elementFromPoint(rectNode.left + rectNode.width/2, rectNode.top + rectNode.height/2);
@@ -603,7 +605,7 @@
         obj.arrow = arrow;
       }
       lines.push(obj);
-	  
+
 	  updateLine(obj);
 
       line.addEventListener('mousedown', e => {
@@ -637,7 +639,7 @@
       if (arrow) {
 		const offsetFactor = 0.55; // Ajustez cette valeur pour le placement désiré
         //const mx = (x1 + x2) / 2;
-        //const my = (y1 + y2) / 2;        
+        //const my = (y1 + y2) / 2;
 		const mx = x1 + (x2- x1)  * offsetFactor;
         const my = y1 + (y2 - y1)  * offsetFactor;
         const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
@@ -703,7 +705,7 @@
       const json = JSON.stringify(data, null, 2);
 
       let filename = prompt('Nom du fichier ?', '35_mind.json');
-      if (filename === null) return; 
+      if (filename === null) return;
       filename = filename.trim() || '35_mindmap.json';
       if (!/\.json$/i.test(filename)) filename += '.json';
 
