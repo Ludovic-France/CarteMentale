@@ -185,6 +185,9 @@
 	  z-index: 5;
 	}
 
+	.group .node {
+	  pointer-events: none;
+	}
 
 
     .group .resizer {
@@ -501,12 +504,7 @@
       node.addEventListener('mousedown', e => {
         if (deleteToggle.checked || e.button !== 0 || e.shiftKey) return;
 
-        svg.style.pointerEvents = 'none';
-        document.querySelectorAll('.node').forEach(n => {
-          if (n !== node) {
-            n.style.pointerEvents = 'none';
-          }
-        });
+        canvasWrapper.style.pointerEvents = 'none';
 
         offsetX = e.offsetX;
         offsetY = e.offsetY;
@@ -522,10 +520,7 @@
           document.removeEventListener('mousemove', drag);
           document.removeEventListener('mouseup', stop);
 
-          svg.style.pointerEvents = 'auto';
-          document.querySelectorAll('.node').forEach(n => {
-            n.style.pointerEvents = 'auto';
-          });
+          canvasWrapper.style.pointerEvents = 'auto';
 
           const rectNode = node.getBoundingClientRect();
           const target = document.elementFromPoint(rectNode.left + rectNode.width/2, rectNode.top + rectNode.height/2);
