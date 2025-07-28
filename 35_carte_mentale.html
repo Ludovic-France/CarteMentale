@@ -185,6 +185,17 @@
       cursor: se-resize;
       border-radius: 2px 0 0 0;
     }
+
+    .group .group-title {
+      width: 100%;
+      box-sizing: border-box;
+      margin: -10px 0 10px;
+      border: none;
+      background: transparent;
+      font-weight: bold;
+      text-align: center;
+      outline: none;
+    }
     
     .image img {
         width: 100%;
@@ -346,6 +357,11 @@
         addImageHandlers(node);
       } else if (type === 'group') {
         node.className = 'node group';
+        const title = document.createElement('input');
+        title.className = 'group-title';
+        title.placeholder = 'Nom du groupe';
+        node.appendChild(title);
+
         const resizer = document.createElement('div');
         resizer.className = 'resizer';
         node.appendChild(resizer);
@@ -420,6 +436,11 @@
         const rect = node.getBoundingClientRect();
         createNode(type, e.clientX - rect.left, e.clientY - rect.top, node);
       });
+
+      const title = node.querySelector('.group-title');
+      if (title) {
+        title.addEventListener('mousedown', e => e.stopPropagation());
+      }
 
       const resizer = node.querySelector('.resizer');
       if (resizer) {
@@ -510,6 +531,11 @@
       node.querySelectorAll('.node').forEach(n => updateAttachedLines(n));
     }
 
+    function getParentGroup(node) {
+      const g = node.closest('.node.group');
+      return g && g !== node ? g : null;
+    }
+
     /******************** Connexion ********************/
     function onNodeMouseDown(e) {
       e.stopPropagation();
@@ -541,7 +567,9 @@
     }
 
     function createConnection(a, b, withArrow = false) {
-	console.log(withArrow);
+      const gA = getParentGroup(a);
+      const gB = getParentGroup(b);
+      if ((gA && gB && gA !== gB) || (gA && !gB) || (!gA && gB)) return;
       if (lines.find(l => (l.from === a && l.to === b) || (l.from === b && l.to === a))) return;
 
       const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
@@ -613,7 +641,8 @@
         type: node.classList.contains('oval') ? 'oval' :
               node.classList.contains('image') ? 'image' :
               node.classList.contains('group') ? 'group' : 'rectangle',
-        html: node.innerHTML,
+        html: node.classList.contains('group') ? '' : node.innerHTML,
+        name: node.classList.contains('group') ? node.querySelector('.group-title').value : undefined,
         left: parseInt(node.style.left, 10),
         top:  parseInt(node.style.top,  10),
         width:  parseInt(node.style.width  || node.offsetWidth , 10),
@@ -677,7 +706,12 @@
       data.nodes.forEach(n => {
         const parent = n.parent ? idMap[n.parent] || canvas : canvas;
         const node = createNode(n.type, 0, 0, parent);
-        node.innerHTML = n.html || n.text || '';
+        if (n.type === 'group') {
+          node.querySelector('.group-title').value = n.name || '';
+        } else {
+          node.innerHTML = n.html || n.text || '';
+          if (n.type === 'image') addImageHandlers(node);
+        }
         node.dataset.id = n.id;
         node.style.left = `${n.left}px`;
         node.style.top  = `${n.top}px`;
